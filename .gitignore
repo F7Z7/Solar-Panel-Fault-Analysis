@@ -1,0 +1,89 @@
+# MATLAB/Simulink .gitignore file
+
+# MATLAB autosave files
+*~
+*.asv
+*.autosave
+
+# MATLAB binary files
+*.mex*
+*.mat
+*.mlx
+*.fig
+*.p
+*.slxc
+
+# Simulink cache files and code generation
+slprj/
+sccprj/
+codegen/
+*.slx.r*
+*.slxp
+*.sldd
+*.mdl.r*
+*.mdlp
+*.slxc
+*.mexw*
+*.mexa*
+*.slreqx
+*.slmx
+
+# Generated helpsearch folders
+helpsearch*/
+
+# Simulink autosave extension
+*.autosave
+
+# Windows default autosave extension
+*.asv
+
+# OSX / *nix default autosave extension
+*.m~
+
+# Compiled MEX binaries (all platforms)
+*.mex*
+
+# Packaged app and toolbox files
+*.mlappinstall
+*.mltbx
+
+# Generated documentation
+html/
+doc/
+
+# Project and build folders
+resources/project/
+resources/project/root.type.Files/
+resources/project/root.type.ProjectPath/
+resources/project/*.xml
+.SimulinkProject/
+
+# Simulink project caches
+*.SDF
+*.sdf
+*.slxc
+
+# Simulink layout file
+*.l2t
+
+# Windows system files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# macOS system files
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# MATLAB project specific
+*.prj
+*.tmw
+*.pref
+
+# Simulink build folders
+work/
+build/
+
