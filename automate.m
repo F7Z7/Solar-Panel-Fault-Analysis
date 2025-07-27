@@ -63,4 +63,3 @@ end
 resultTable = array2table(results, 'VariableNames', {'Irradiance', 'Temperature', 'V_PV', 'I_PV'});
 writetable(resultTable, 'solar_sim_results.csv');
 fprintf('Simulation complete. Results saved to solar_sim_results.csv\n');
-w
