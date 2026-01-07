@@ -39,7 +39,7 @@ helpsearch*/
 
 # OSX / *nix default autosave extension
 *.m~
-
+/.idea/
 # Compiled MEX binaries (all platforms)
 *.mex*
 
@@ -87,3 +87,4 @@ $RECYCLE.BIN/
 work/
 build/
 
+*.csv
