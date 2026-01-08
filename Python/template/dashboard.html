@@ -3,9 +3,94 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Title</title>
+    <title>Solar Panel Dashboard</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            max-width: 1000px;
+            margin: auto;
+        }
+
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .label {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .value {
+            font-size: 28px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        .fault-ok {
+            color: green;
+        }
+
+        .fault-bad {
+            color: red;
+        }
+    </style>
 </head>
 <body>
+
+    <h1>Solar Fault Monitoring Dashboard</h1>
+
+    <div class="dashboard">
+        <div class="card">
+            <div class="label">Voltage (V)</div>
+            <div class="value">{{ data.voltage }}</div>
+        </div>
+
+        <div class="card">
+            <div class="label">Current (A)</div>
+            <div class="value">{{ data.current }}</div>
+        </div>
+
+        <div class="card">
+            <div class="label">Irradiance (W/m²)</div>
+            <div class="value">{{ data.irradiance }}</div>
+        </div>
+
+        <div class="card">
+            <div class="label">Temperature (°C)</div>
+            <div class="value">{{ data.temperature }}</div>
+        </div>
+
+        <div class="card">
+            <div class="label">Fault Status</div>
+            <div class="value {{ 'fault-ok' if data.fault_status == 'Normal' else 'fault-bad' }}">
+                {{ data.fault_status }}
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="label">Fault Type</div>
+            <div class="value">{{ data.fault_type }}</div>
+        </div>
+    </div>
 
 </body>
 </html>
