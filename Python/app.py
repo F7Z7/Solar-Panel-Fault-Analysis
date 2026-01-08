@@ -58,9 +58,25 @@ def analyze_data(voltage, current, irradiance, temperature):
 
 
 @app.route('/ui')
-def ui(voltage,current,irradiance,temperature,fault_status,fault_type):
-    data=[voltage,current,irradiance,temperature,fault_status,fault_type]
-    return render_template('dashboard.html',data=data)
+def ui():
+
+    voltage = 32.5          # V
+    current = 5.2           # A
+    irradiance = 820        # W/m²
+    temperature = 41.3      # °C
+    fault_status = "Normal"
+    fault_type = "None"
+
+    data = {
+        "voltage": voltage,
+        "current": current,
+        "irradiance": irradiance,
+        "temperature": temperature,
+        "fault_status": fault_status,
+        "fault_type": fault_type
+    }
+
+    return render_template('dashboard.html', data=data)
 
 if __name__ == "__main__":
     app.run(debug=True)
