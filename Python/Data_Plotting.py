@@ -2,10 +2,13 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+from matplotlib.lines import Line2D
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler, LabelEncoder
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import classification_report, confusion_matrix
+import joblib
+import os
 
 df_normal = pd.read_csv("C:\\Users\\farza\\MATLAB-SIMULINK\\Solar-Panel-Fault-Analysis\\Data_sets\\solar_sim_results_cleaned_valid.csv")
 
@@ -73,9 +76,25 @@ scatter = plt.scatter(df_combined['V_PV'], df_combined['I_PV'],
 plt.xlabel("PV Voltage ($V_{PV}$)")
 plt.ylabel("PV Current ($I_{PV}$)")
 plt.title("I-V Curve Points Colored by Fault Type")
-# Create a legend using the actual fault names
-plt.legend(handles=scatter.legend_elements()[0], labels=target_names, title="Fault Type")
+colors = plt.cm.viridis(np.linspace(0, 1, len(target_names)))
+
+legend_elements = [
+    Line2D([0], [0], marker='o', color='w',
+           label=target_names[i],
+           markerfacecolor=colors[i], markersize=8)
+    for i in range(len(target_names))
+]
+
+plt.legend(handles=legend_elements, title="Fault Type")
 plt.grid(True)
 plt.show()
 
 
+## saveign the model and scaler
+
+MODEL_DIR = "models"
+os.makedirs(MODEL_DIR, exist_ok=True)
+
+joblib.dump(knn_classifier, f"{MODEL_DIR}/knn_oc_sc_classifier.pkl")
+joblib.dump(scaler, f"{MODEL_DIR}/oc_sc_scaler.pkl")
+joblib.dump(le, f"{MODEL_DIR}/fault_label_encoder.pkl")
