@@ -48,13 +48,39 @@ def receive_esp32_data():
         "device_id": device_id,
         # "fault": prediction
     })
+
+def operating_region(voltage, current,irradiance):
+    Voc_est = 0.04 * irradiance
+    Isc_est = 0.005 * irradiance
+
+    v_ratio = voltage / (Voc_est + 1e-6)
+    i_ratio = current / (Isc_est + 1e-6)
+
+    if v_ratio > 0.9 and i_ratio < 0.1:
+        return "OC"
+    elif v_ratio < 0.1 and i_ratio > 0.9:
+        return "SC"
+    else:
+        return "NORMAL"
+
 def analyze_data(voltage, current, irradiance, temperature):
     # model=FaultDetector() placeholder for actual model
     # prediction = model.predict([[voltage, current, irradiance, temperature]])
-    if voltage < 10 or irradiance < 200:
-        return "Fault suspected"
-    return "Normal"
 
+    region=operating_region(voltage, current, irradiance)
+
+    if region in ["OC", "SC"]:
+        # fault = oc_sc_model.predict([[voltage, current, irradiance, temperature]])
+        return {
+            "region": region,
+            "fault_type": fault
+        }
+    else:
+        fault = hotspot_model.predict([[voltage, current, irradiance, temperature]])
+        return {
+            "region": "NORMAL_OPERATION",
+            "fault_type": fault
+        }
 
 
 @app.route('/ui')
