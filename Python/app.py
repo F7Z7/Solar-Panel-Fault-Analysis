@@ -70,7 +70,7 @@ def analyze_data(voltage, current, irradiance, temperature):
     region=operating_region(voltage, current, irradiance)
 
     if region in ["OC", "SC"]:
-        # fault = oc_sc_model.predict([[voltage, current, irradiance, temperature]])
+        fault = oc_sc_model.predict([[voltage, current, irradiance, temperature]])
         return {
             "region": region,
             "fault_type": fault

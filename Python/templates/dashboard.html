@@ -6,36 +6,72 @@
     <title>Solar Panel Dashboard</title>
 
     <style>
+        :root {
+            --bg: #f4f6f8;
+            --card-bg: #ffffff;
+            --text-muted: #666;
+            --ok: #2e7d32;
+            --bad: #c62828;
+        }
+
         body {
             font-family: Arial, sans-serif;
-            background: #f4f6f8;
+            background: var(--bg);
             margin: 0;
             padding: 20px;
         }
 
-        h1 {
+        header {
             text-align: center;
             margin-bottom: 30px;
         }
 
+        header h1 {
+            margin-bottom: 5px;
+        }
+
+        header .date {
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+        header h2{
+            font-size: 20px;
+            opacity: 75%;
+        }
+
         .dashboard {
+            max-width: 1100px;
+            margin: auto;
+            display: grid;
+            gap: 30px;
+        }
+
+        .section {
+            display: grid;
+            gap: 15px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .cards {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
             gap: 20px;
-            max-width: 1000px;
-            margin: auto;
         }
 
         .card {
-            background: white;
+            background: var(--card-bg);
             border-radius: 10px;
             padding: 20px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
             text-align: center;
         }
 
         .label {
-            color: #666;
+            color: var(--text-muted);
             font-size: 14px;
         }
 
@@ -46,51 +82,77 @@
         }
 
         .fault-ok {
-            color: green;
+            color: var(--ok);
         }
 
         .fault-bad {
-            color: red;
+            color: var(--bad);
         }
     </style>
 </head>
 <body>
 
+<header>
     <h1>Solar Fault Monitoring Dashboard</h1>
+    <h2>Powered by ML</h2>
+    <div class="date" id="date"></div>
+</header>
 
-    <div class="dashboard">
-        <div class="card">
-            <div class="label">Voltage (V)</div>
-            <div class="value">{{ data.voltage }}</div>
-        </div>
+<main class="dashboard">
 
-        <div class="card">
-            <div class="label">Current (A)</div>
-            <div class="value">{{ data.current }}</div>
-        </div>
-
-        <div class="card">
-            <div class="label">Irradiance (W/m²)</div>
-            <div class="value">{{ data.irradiance }}</div>
-        </div>
-
-        <div class="card">
-            <div class="label">Temperature (°C)</div>
-            <div class="value">{{ data.temperature }}</div>
-        </div>
-
-        <div class="card">
-            <div class="label">Fault Status</div>
-            <div class="value {{ 'fault-ok' if data.fault_status == 'Normal' else 'fault-bad' }}">
-                {{ data.fault_status }}
+    <!-- Core Characteristics -->
+    <section class="section">
+        <div class="section-title">Core Characteristics</div>
+        <div class="cards">
+            <div class="card">
+                <div class="label">Voltage (V)</div>
+                <div class="value">{{ data.voltage }}</div>
+            </div>
+            <div class="card">
+                <div class="label">Current (A)</div>
+                <div class="value">{{ data.current }}</div>
             </div>
         </div>
+    </section>
 
-        <div class="card">
-            <div class="label">Fault Type</div>
-            <div class="value">{{ data.fault_type }}</div>
+    <!-- Environmental Conditions -->
+    <section class="section">
+        <div class="section-title">Environmental Conditions</div>
+        <div class="cards">
+            <div class="card">
+                <div class="label">Irradiance (W/m²)</div>
+                <div class="value">{{ data.irradiance }}</div>
+            </div>
+            <div class="card">
+                <div class="label">Temperature (°C)</div>
+                <div class="value">{{ data.temperature }}</div>
+            </div>
         </div>
-    </div>
+    </section>
+
+    <!-- Fault Information -->
+    <section class="section">
+        <div class="section-title">Fault Information</div>
+        <div class="cards">
+            <div class="card">
+                <div class="label">Fault Status</div>
+                <div class="value {{ 'fault-ok' if data.fault_status == 'Normal' else 'fault-bad' }}">
+                    {{ data.fault_status }}
+                </div>
+            </div>
+            <div class="card">
+                <div class="label">Fault Type</div>
+                <div class="value">{{ data.fault_type }}</div>
+            </div>
+        </div>
+    </section>
+
+</main>
+
+<script>
+    const date = new Date();
+    document.getElementById("date").textContent = date.toDateString();
+</script>
 
 </body>
 </html>
