@@ -1,6 +1,7 @@
 from flask import Flask, jsonify, request,render_template
 
-
+import pickle
+import numpy as np
 
 app=Flask(__name__)
 
@@ -41,7 +42,7 @@ def receive_esp32_data():
             "error": "Invalid or malformed sample data",
             "details": str(e)
         }), 400
-    # prediction = analyze_data(voltage, current, irradiance, temperature)
+    prediction = analyze_data(voltage, current, irradiance, temperature)
 
     return jsonify({
         "status": "received",
@@ -70,7 +71,13 @@ def analyze_data(voltage, current, irradiance, temperature):
     region=operating_region(voltage, current, irradiance)
 
     if region in ["OC", "SC"]:
-        fault = oc_sc_model.predict([[voltage, current, irradiance, temperature]])
+        model_path = "Python//models//knn_oc_sc_classifier.pkl"
+        with open(model_path, "rb") as f:
+            model = pickle.load(f)
+
+        features = np.array([[voltage, current, irradiance, temperature]])
+        fault = model.predict(features)
+        print(fault)
         return {
             "region": region,
             "fault_type": fault
