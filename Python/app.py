@@ -78,10 +78,23 @@ def analyze_data(voltage, current, irradiance, temperature):
 
 @app.route('/ui')
 def ui():
-    if LATEST_DATA is None:
-        return "No ESP32 data received yet."
+    voltage = 32  # V
+    current = 1  # A
+    irradiance = 820  # W/m²
+    temperature = 41.3  # °C
+    fault_status = "Fault"
+    fault_type = "Open Circuit"
 
-    return render_template("dashboard.html", data=LATEST_DATA)
+    data = {
+        "voltage": voltage,
+        "current": current,
+        "irradiance": irradiance,
+        "temperature": temperature,
+        "fault_status": fault_status,
+        "fault_type": fault_type
+    }
+
+    return render_template("dashboard.html", data=data  )
 
 if __name__ == "__main__":
     app.run(debug=True)
