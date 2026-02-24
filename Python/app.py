@@ -1,19 +1,12 @@
 import joblib
-from flask import Flask, jsonify, request,render_template
-
-import pickle
+from flask import Flask, jsonify, request, render_template
 import numpy as np
 
-app=Flask(__name__)
+app = Flask(__name__)
 
+LATEST_DATA = {}
 
-@app.route('/')
-def home():
-    return "Welcome to the Flask API!"
-
-#loading models
 KNN_MODEL = joblib.load("models/knn_oc_sc_classifier.pkl")
-
 
 @app.route("/api/esp32/data", methods=["POST"])
 def receive_esp32_data():
@@ -39,8 +32,8 @@ def receive_esp32_data():
         "current": current,
         "irradiance": irradiance,
         "temperature": temperature,
-        "region": prediction["region"],
-        "fault_type": prediction["fault_type"]
+        "fault_type": prediction["fault_type"],
+        "fault_status": prediction["fault_status"]
     }
 
     return jsonify({
@@ -48,7 +41,8 @@ def receive_esp32_data():
         "prediction": prediction
     })
 
-def operating_region(voltage, current,irradiance):
+
+def operating_region(voltage, current, irradiance, temp):
     Voc_est = 0.04 * irradiance
     Isc_est = 0.005 * irradiance
 
@@ -62,39 +56,43 @@ def operating_region(voltage, current,irradiance):
     else:
         return "NORMAL"
 
+
 def analyze_data(voltage, current, irradiance, temperature):
-    region = operating_region(voltage, current, irradiance)
+    region = operating_region(voltage, current, irradiance, temperature)
 
     if region in ["OC", "SC"]:
-        features = np.array([[voltage, current, irradiance, temperature]])
-        fault = KNN_MODEL.predict(features)[0]
+        fault_status = "Fault"
+        fault = region
     else:
+        fault_status = "Normal"
         fault = "NONE"
 
     return {
-        "region": region,
-        "fault_type": str(fault)
+        "fault_type": fault,
+        "fault_status": fault_status
     }
 
-@app.route('/ui')
+
+@app.route('/')
 def ui():
-    voltage = 32  # V
-    current = 1  # A
-    irradiance = 820  # W/m²
-    temperature = 41.3  # °C
-    fault_status = "Fault"
-    fault_type = "Open Circuit"
+    voltage = 32
+    current = 1
+    irradiance = 820
+    temperature = 41.3
+
+    result = analyze_data(voltage, current, irradiance, temperature)
 
     data = {
         "voltage": voltage,
         "current": current,
         "irradiance": irradiance,
         "temperature": temperature,
-        "fault_status": fault_status,
-        "fault_type": fault_type
+        "fault_status": result["fault_status"],
+        "fault_type": result["fault_type"]
     }
 
-    return render_template("dashboard.html", data=data  )
+    return render_template("dashboard.html", data=data)
+
 
 if __name__ == "__main__":
     app.run(debug=True)
