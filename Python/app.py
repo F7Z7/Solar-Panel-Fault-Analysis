@@ -72,27 +72,17 @@ def analyze_data(voltage, current, irradiance, temperature):
         "fault_status": fault_status
     }
 
+# @app.route("/api/latest", methods=["GET"])
+# def get_latest():
+#     return jsonify(LATEST_DATA)
 
 @app.route('/')
 def ui():
-    voltage = 32
-    current = 1
-    irradiance = 820
-    temperature = 41.3
+    global LATEST_DATA
 
-    result = analyze_data(voltage, current, irradiance, temperature)
+    if not LATEST_DATA:
+        return "No data received yet"
 
-    data = {
-        "voltage": voltage,
-        "current": current,
-        "irradiance": irradiance,
-        "temperature": temperature,
-        "fault_status": result["fault_status"],
-        "fault_type": result["fault_type"]
-    }
-
-    return render_template("dashboard.html", data=data)
-
-
+    return render_template("dashboard.html", data=LATEST_DATA)
 if __name__ == "__main__":
     app.run(debug=True)
