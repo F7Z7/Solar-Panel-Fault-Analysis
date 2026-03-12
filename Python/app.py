@@ -1,3 +1,5 @@
+from collections import deque
+
 import joblib
 from flask import Flask, jsonify, request, render_template
 import numpy as np
@@ -7,6 +9,13 @@ app = Flask(__name__)
 LATEST_DATA = {}
 
 KNN_MODEL = joblib.load("models/knn_oc_sc_classifier.pkl")
+
+# Ring buffer for irradiance (last 5 readings)
+IRRADIANCE_BUFFER = deque(maxlen=5)
+
+# Hotspot temperature threshold
+HOTSPOT_TEMP = 65
+
 
 @app.route("/api/esp32/data", methods=["POST"])
 def receive_esp32_data():
@@ -56,21 +65,54 @@ def operating_region(voltage, current, irradiance, temp):
     else:
         return "NORMAL"
 
+def detect_partial_shading(irradiance):
+
+    IRRADIANCE_BUFFER.append(irradiance)
+
+    # Wait until buffer is full
+    if len(IRRADIANCE_BUFFER) < 5:
+        return False
+
+    values = list(IRRADIANCE_BUFFER)
+
+    # Check continuous decrease
+    for i in range(len(values) - 1):
+        if values[i] <= values[i + 1]:
+            return False
+
+    return True
 
 def analyze_data(voltage, current, irradiance, temperature):
+
     region = operating_region(voltage, current, irradiance, temperature)
 
+    # OC / SC Fault
     if region in ["OC", "SC"]:
-        fault_status = "Fault"
-        fault = region
-    else:
-        fault_status = "Normal"
-        fault = "NONE"
+        return {
+            "fault_type": region,
+            "fault_status": "Fault"
+        }
 
+    # Hotspot Fault
+    if temperature > HOTSPOT_TEMP:
+        return {
+            "fault_type": "HOTSPOT",
+            "fault_status": "Fault"
+        }
+
+    # Partial Shading Fault
+    if detect_partial_shading(irradiance):
+        return {
+            "fault_type": "PARTIAL_SHADING",
+            "fault_status": "Fault"
+        }
+
+    # Normal Condition
     return {
-        "fault_type": fault,
-        "fault_status": fault_status
+        "fault_type": "NONE",
+        "fault_status": "Normal"
     }
+
 
 # @app.route("/api/latest", methods=["GET"])
 # def get_latest():
