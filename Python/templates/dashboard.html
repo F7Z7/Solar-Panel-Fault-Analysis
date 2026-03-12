@@ -1,157 +1,395 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Solar Panel Dashboard</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Solar Fault Monitor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow:wght@400;600;700;900&display=swap" rel="stylesheet" />
 
-    <style>
-        :root {
-            --bg: lightyellow;
-            --card-bg: #ffffff;
-            --text-muted: #666;
-            --ok: #2e7d32;
-            --bad: #c62828;
-        }
+  <style>
+    /* ── Design tokens ──────────────────────────────────────────────── */
+    :root {
+      --bg:          #0b0f14;
+      --panel:       #111720;
+      --border:      #1e2d3d;
+      --accent:      #00c8ff;
+      --accent-dim:  #00c8ff33;
+      --text:        #d6e4f0;
+      --muted:       #4a6278;
+      --mono:        'Share Tech Mono', monospace;
+      --sans:        'Barlow', sans-serif;
 
-        body {
-            font-family: Arial, sans-serif;
-            background: var(--bg);
-            margin: 0;
-            padding: 20px;
-        }
+      /* fault colours */
+      --c-normal:    #00e676;
+      --c-warning:   #ffd740;
+      --c-fault:     #ff3d3d;
+      --c-oc:        #ff9100;
+      --c-sc:        #e040fb;
+      --c-hotspot:   #ff3d3d;
+      --c-shading:   #ffd740;
+    }
 
-        header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-        header h1 {
-            margin-bottom: 5px;
-        }
+    body {
+      font-family: var(--sans);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 24px 20px 48px;
+      /* subtle grid texture */
+      background-image:
+        linear-gradient(var(--border) 1px, transparent 1px),
+        linear-gradient(90deg, var(--border) 1px, transparent 1px);
+      background-size: 40px 40px;
+    }
 
-        header .date {
-            color: var(--text-muted);
-            font-size: 14px;
-        }
-        header h2{
-            font-size: 20px;
-            opacity: 75%;
-        }
+    /* ── Header ─────────────────────────────────────────────────────── */
+    header {
+      max-width: 1100px;
+      margin: 0 auto 36px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 18px;
+    }
 
-        .dashboard {
-            max-width: 1100px;
-            margin: auto;
-            display: grid;
-            gap: 30px;
-        }
+    .header-left h1 {
+      font-family: var(--sans);
+      font-size: clamp(22px, 4vw, 34px);
+      font-weight: 900;
+      letter-spacing: -0.5px;
+      line-height: 1.1;
+    }
 
-        .section {
-            display: grid;
-            gap: 15px;
-        }
+    .header-left h1 span { color: var(--accent); }
 
-        .section-title {
-            font-size: 18px;
-            font-weight: bold;
-        }
+    .header-left .sub {
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 6px;
+      letter-spacing: 0.08em;
+    }
 
-        .cards {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 20px;
-        }
+    .header-right {
+      text-align: right;
+    }
 
-        .card {
-            background: var(--card-bg);
-            border-radius: 10px;
-            padding: 20px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-            text-align: center;
-        }
+    .header-right #clock {
+      font-family: var(--mono);
+      font-size: 13px;
+      color: var(--accent);
+    }
 
-        .label {
-            color: var(--text-muted);
-            font-size: 14px;
-        }
+    .header-right #dateline {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 3px;
+    }
 
-        .value {
-            font-size: 28px;
-            font-weight: bold;
-            margin-top: 10px;
-        }
+    /* ── Live pulse indicator ────────────────────────────────────────── */
+    .live-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--c-normal);
+      margin-top: 8px;
+      letter-spacing: 0.1em;
+    }
 
-        .fault-ok {
-            color: var(--ok);
-        }
+    .live-badge .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--c-normal);
+      animation: pulse 1.6s ease-in-out infinite;
+    }
 
-        .fault-bad {
-            color: var(--bad);
-        }
-    </style>
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: 0.35; transform: scale(0.7); }
+    }
+
+    /* ── Dashboard grid ─────────────────────────────────────────────── */
+    .dashboard {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: grid;
+      gap: 28px;
+    }
+
+    /* ── Section ─────────────────────────────────────────────────────── */
+    .section-label {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.15em;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .section-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* ── Cards grid ──────────────────────────────────────────────────── */
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 16px;
+    }
+
+    /* ── Card ────────────────────────────────────────────────────────── */
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 22px 20px 20px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.25s;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 3px;
+      background: var(--accent);
+      opacity: 0.6;
+    }
+
+    .card:hover { border-color: var(--accent); }
+
+    .card .card-label {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+
+    .card .card-value {
+      font-family: var(--sans);
+      font-size: 36px;
+      font-weight: 900;
+      color: var(--text);
+      margin-top: 10px;
+      line-height: 1;
+      letter-spacing: -1px;
+    }
+
+    .card .card-unit {
+      font-family: var(--mono);
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    /* ── Fault card (spans full row) ─────────────────────────────────── */
+    .fault-section .cards {
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    }
+
+    .fault-card {
+      padding: 28px 24px;
+    }
+
+    .fault-card .card-value {
+      font-size: 30px;
+      letter-spacing: 0;
+    }
+
+    /* Fault-specific accent colours applied via JS */
+    .fault-card.state-normal  { --accent: var(--c-normal);  }
+    .fault-card.state-warning { --accent: var(--c-warning); }
+    .fault-card.state-fault   { --accent: var(--c-fault);   }
+
+    .fault-card.state-normal  .card-value { color: var(--c-normal);  }
+    .fault-card.state-warning .card-value { color: var(--c-warning); }
+    .fault-card.state-fault   .card-value { color: var(--c-fault);   }
+
+    /* Type-specific colours for fault type card */
+    .type-NONE            .card-value { color: var(--c-normal);  }
+    .type-OC              .card-value { color: var(--c-oc);      }
+    .type-SC              .card-value { color: var(--c-sc);      }
+    .type-Hotspot         .card-value { color: var(--c-hotspot); }
+    .type-PartialShading  .card-value { color: var(--c-shading); }
+
+    /* ── Irradiance mini-bar (ring buffer visualiser) ─────────────────── */
+    .ring-bar-row {
+      display: flex;
+      align-items: flex-end;
+      gap: 5px;
+      height: 40px;
+      margin-top: 14px;
+    }
+
+    .ring-bar {
+      flex: 1;
+      background: var(--accent);
+      border-radius: 2px 2px 0 0;
+      opacity: 0.7;
+      transition: height 0.4s ease;
+      min-height: 4px;
+    }
+
+    /* ── Footer ──────────────────────────────────────────────────────── */
+    footer {
+      max-width: 1100px;
+      margin: 40px auto 0;
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--muted);
+      text-align: center;
+    }
+  </style>
 </head>
 <body>
 
+<!-- ── Header ──────────────────────────────────────────────────────────── -->
 <header>
-    <h1>Solar Fault Monitoring Dashboard</h1>
-    <h2>Powered by ML</h2>
-    <div class="date" id="date"></div>
+  <div class="header-left">
+    <h1>Solar <span>Fault</span> Monitor</h1>
+    <div class="sub">ML-ASSISTED REAL-TIME DIAGNOSTICS · ESP32 NODE</div>
+    <div class="live-badge"><span class="dot"></span>LIVE DATA</div>
+  </div>
+  <div class="header-right">
+    <div id="clock">--:--:--</div>
+    <div id="dateline">---</div>
+  </div>
 </header>
 
+<!-- ── Dashboard ───────────────────────────────────────────────────────── -->
 <main class="dashboard">
 
-    <!-- Core Characteristics -->
-    <section class="section">
-        <div class="section-title">Core Characteristics</div>
-        <div class="cards">
-            <div class="card">
-                <div class="label">Voltage (V)</div>
-                <div class="value">{{ data.voltage }}</div>
-            </div>
-            <div class="card">
-                <div class="label">Current (A)</div>
-                <div class="value">{{ data.current }}</div>
-            </div>
-        </div>
-    </section>
+  <!-- Core electrical measurements -->
+  <section>
+    <div class="section-label">Core Characteristics</div>
+    <div class="cards">
+      <div class="card">
+        <div class="card-label">Voltage</div>
+        <div class="card-value">{{ "%.2f"|format(data.voltage) }}</div>
+        <div class="card-unit">V</div>
+      </div>
+      <div class="card">
+        <div class="card-label">Current</div>
+        <div class="card-value">{{ "%.3f"|format(data.current) }}</div>
+        <div class="card-unit">A</div>
+      </div>
+      <div class="card">
+        <div class="card-label">Power</div>
+        <div class="card-value">{{ "%.2f"|format(data.voltage * data.current) }}</div>
+        <div class="card-unit">W</div>
+      </div>
+    </div>
+  </section>
 
-    <!-- Environmental Conditions -->
-    <section class="section">
-        <div class="section-title">Environmental Conditions</div>
-        <div class="cards">
-            <div class="card">
-                <div class="label">Irradiance (W/m²)</div>
-                <div class="value">{{ data.irradiance }}</div>
-            </div>
-            <div class="card">
-                <div class="label">Temperature (°C)</div>
-                <div class="value">{{ data.temperature }}</div>
-            </div>
-        </div>
-    </section>
+  <!-- Environmental conditions -->
+  <section>
+    <div class="section-label">Environmental Conditions</div>
+    <div class="cards">
+      <div class="card">
+        <div class="card-label">Irradiance</div>
+        <div class="card-value">{{ "%.1f"|format(data.irradiance) }}</div>
+        <div class="card-unit">W/m²</div>
+      </div>
+      <div class="card">
+        <div class="card-label">Temperature</div>
+        <div class="card-value">{{ "%.1f"|format(data.temperature) }}</div>
+        <div class="card-unit">°C</div>
 
-    <!-- Fault Information -->
-    <section class="section">
-        <div class="section-title">Fault Information</div>
-        <div class="cards">
-            <div class="card">
-                <div class="label">Fault Status</div>
-                <div class="value {{ 'fault-ok' if data.fault_status == 'Normal' else 'fault-bad' }}">
-                    {{ data.fault_status }}
-                </div>
-            </div>
-            <div class="card">
-                <div class="label">Fault Type</div>
-                <div class="value">{{ data.fault_type }}</div>
-            </div>
+        <!-- Hotspot proximity bar -->
+        {% set pct = [((data.temperature / 70.0) * 100), 100] | min %}
+        <div style="margin-top:14px; background:#1e2d3d; border-radius:3px; height:6px; overflow:hidden;">
+          <div style="
+            width: {{ pct }}%;
+            height: 100%;
+            border-radius: 3px;
+            background: {% if data.temperature > 70 %}#ff3d3d{% elif data.temperature > 55 %}#ffd740{% else %}#00c8ff{% endif %};
+            transition: width 0.4s ease;
+          "></div>
         </div>
-    </section>
+        <div style="font-family:'Share Tech Mono',monospace; font-size:10px; color:#4a6278; margin-top:5px;">
+          HOTSPOT THRESHOLD: 70 °C
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Fault status -->
+  <section class="fault-section">
+    <div class="section-label">Fault Diagnostics</div>
+    <div class="cards">
+
+      <!-- Fault Status card -->
+      {% set status_class = 'state-normal' if data.fault_status == 'Normal' else ('state-warning' if data.fault_status == 'Warning' else 'state-fault') %}
+      <div class="card fault-card {{ status_class }}">
+        <div class="card-label">Fault Status</div>
+        <div class="card-value">{{ data.fault_status }}</div>
+        <div class="card-unit" style="margin-top:8px;">
+          {% if data.fault_status == 'Normal' %}System operating within normal parameters
+          {% elif data.fault_status == 'Warning' %}Potential issue detected — monitor closely
+          {% else %}Fault condition active — inspection required{% endif %}
+        </div>
+      </div>
+
+      <!-- Fault Type card -->
+      {% set type_key = data.fault_type | replace(' ', '') %}
+      <div class="card fault-card type-{{ type_key }}">
+        <div class="card-label">Fault Type</div>
+        <div class="card-value">
+          {% if data.fault_type == 'NONE' %}None
+          {% elif data.fault_type == 'OC' %}Open Circuit
+          {% elif data.fault_type == 'SC' %}Short Circuit
+          {% elif data.fault_type == 'Hotspot' %}Hotspot
+          {% elif data.fault_type == 'Partial Shading' %}Partial Shading
+          {% else %}{{ data.fault_type }}{% endif %}
+        </div>
+        <div class="card-unit" style="margin-top:8px;">
+          {% if data.fault_type == 'NONE' %}No fault detected
+          {% elif data.fault_type == 'OC' %}Voltage at open-circuit level; no current path
+          {% elif data.fault_type == 'SC' %}Current at short-circuit level; no voltage
+          {% elif data.fault_type == 'Hotspot' %}Cell temperature above 70 °C threshold
+          {% elif data.fault_type == 'Partial Shading' %}Continuous irradiance decline over last 5 readings
+          {% endif %}
+        </div>
+      </div>
+
+    </div>
+  </section>
 
 </main>
 
+<footer>
+  AUTO-REFRESH EVERY 5 s &nbsp;·&nbsp; RING BUFFER: 5 IRRADIANCE SAMPLES &nbsp;·&nbsp; HOTSPOT THRESHOLD: 70 °C
+</footer>
+
 <script>
-    const date = new Date();
-    document.getElementById("date").textContent = date.toDateString();
+  /* ── Clock ── */
+  function tick() {
+    const now = new Date();
+    document.getElementById('clock').textContent = now.toLocaleTimeString('en-US', { hour12: false });
+    document.getElementById('dateline').textContent = now.toDateString().toUpperCase();
+  }
+  tick();
+  setInterval(tick, 1000);
+
+  /* ── Auto-refresh page every 5 seconds ── */
+  setTimeout(() => location.reload(), 5000);
 </script>
 
 </body>
